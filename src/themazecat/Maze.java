@@ -3,6 +3,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
+import javax.swing.JFileChooser;
+
 import org.jsfml.graphics.*;
 import org.jsfml.window.*;
 import org.jsfml.window.Keyboard.Key;
@@ -10,27 +12,38 @@ import org.jsfml.window.event.*;
 
 public class Maze {
 
-	private RenderWindow mazewindow;
+	RenderWindow mazewindow;
 	
-	private char squares[][];
+	char squares[][];
 	
-	private int size1;
+	int size1;
 	
-	private int size2;
+	int size2;
 	
-	private int WINDOW_HEIGHT;
-	private int WINDOW_WIDTH;
+	int WINDOW_HEIGHT;
+	int WINDOW_WIDTH;
 	
-	private int nbMouses;
+	int nbMouses;
 	
-	private Mazesprite maze;
+	int catchedMouses;
+
+	boolean reload;
+	boolean quit;
 	
-	private Entity cat;
+	String filepath;
 	
-	private Entity mouses[];
+	Mazesprite maze;
+	
+	Entity cat;
+	
+	Entity mouses[];
 	
 
-	public Maze() throws FileNotFoundException {
+	public Maze(String path) throws FileNotFoundException {
+		
+		reload = false;
+		quit = false;
+		filepath = path;
 		
 		initMaze();
 		
@@ -52,7 +65,10 @@ public class Maze {
 			if(event.type == Event.Type.KEY_PRESSED)
 			{
 				if(Keyboard.isKeyPressed(Key.ESCAPE))
+				{
+					quit = true;
 					mazewindow.close();
+				}
 				
 				if(Keyboard.isKeyPressed(Key.UP))
 					if(squares[cat.y-1][cat.x]!='#')
@@ -65,10 +81,35 @@ public class Maze {
 				if(Keyboard.isKeyPressed(Key.LEFT))
 					if(squares[cat.y][cat.x-1]!='#')
 						cat.move("LEFT");
-					
+				
 				if(Keyboard.isKeyPressed(Key.RIGHT))
 					if(squares[cat.y][cat.x+1]!='#')
 						cat.move("RIGHT");
+				
+				if(Keyboard.isKeyPressed(Key.C))
+				{
+					JFileChooser choosenfile = new JFileChooser();
+					
+					if(choosenfile.showOpenDialog(null)==JFileChooser.APPROVE_OPTION)
+					{
+						mazewindow.close();
+						
+						String file = choosenfile.getSelectedFile().getAbsolutePath();
+						
+						filepath = file;
+						
+						reload = true;
+					}
+					
+					else choosenfile.cancelSelection();
+				}
+				
+				if(Keyboard.isKeyPressed(Key.R))
+				{
+					mazewindow.close();
+					
+					reload = true;
+				}
 			}
 		}
 	}
@@ -79,7 +120,7 @@ public class Maze {
 		
 		mazewindow = new RenderWindow();
 		
-		mazewindow.create(new VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32), "The Maze Cat");
+		mazewindow.create(new VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT+40, 32), "The Maze Cat");
 		
 		mazewindow.setFramerateLimit(60);
 		
@@ -92,10 +133,15 @@ public class Maze {
 	{	
 		Mazesprite wall = new Mazesprite("img/wall.png");
 		Mazesprite trap = new Mazesprite("img/trap.png");
+		Mazesprite menu = new Mazesprite("img/menu.png");
 		
 		mazewindow.clear();
 		
 		mazewindow.draw(maze);
+		
+		menu.setPosition(WINDOW_WIDTH/2, WINDOW_HEIGHT+20);
+		
+		mazewindow.draw(menu);
 				
 		for(int i=0; i<size1; i++)
 			for(int j=0; j<size2; j++)
@@ -115,8 +161,11 @@ public class Maze {
 		
 		for(int i=0; i<nbMouses; i++)
 		{	
-			mouses[i].entity.setPosition(mouses[i].x*40+20, mouses[i].y*40+20);
-			mazewindow.draw(mouses[i].entity);
+			if(mouses[i].type!="DEAD")
+			{
+				mouses[i].entity.setPosition(mouses[i].x*40+20, mouses[i].y*40+20);
+				mazewindow.draw(mouses[i].entity);
+			}
 		}
 		
 		cat.entity.setPosition(cat.x*40+20, cat.y*40+20);
@@ -130,7 +179,7 @@ public class Maze {
 	{
 		nbMouses = 0;
 		
-		Scanner lines = new Scanner(new File("maze.txt"));
+		Scanner lines = new Scanner(new File(filepath));
 		
 		int line = 0;
 		int number = 0;
@@ -143,7 +192,7 @@ public class Maze {
 		
 		lines.close();
 		
-		Scanner chars = new Scanner(new File("maze.txt"));
+		Scanner chars = new Scanner(new File(filepath));
 		
 		chars.useDelimiter("");
 		
@@ -165,13 +214,12 @@ public class Maze {
 	}
 	
 	public void saveSquaresEntities() throws FileNotFoundException
-	{
-		
+	{	
 		System.out.println(size1+" "+size2);
 		
 		int i=0, j=0, nbm=0;
 		
-		Scanner wall = new Scanner(new File("maze.txt"));
+		Scanner wall = new Scanner(new File(filepath));
 		
 		wall.useDelimiter("");
 		
@@ -183,11 +231,13 @@ public class Maze {
 				if(c=='C')
 				{
 					cat = new Entity(j, i, "CAT");
+					squares[i][j]=' ';
 				}
 				
 				if(c=='M')
 				{
 					mouses[nbm] = new Entity(j, i, "MOUSE");
+					squares[i][j]=' ';
 					nbm++;
 				}
 				
@@ -216,13 +266,34 @@ public class Maze {
 		mouses = new Entity[nbMouses];
 		
 		saveSquaresEntities();
+		
+		catchedMouses = 0;
 	}
 	
-	public void startMouses()
+	public void winlose()
 	{
-		for(int i=0; i<nbMouses; i++)
+		if(catchedMouses == nbMouses)
 		{
-			mouses[i].start();
+			Mazesprite win = new Mazesprite("img/win.png");
+			
+			win.setPosition(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+			
+			mazewindow.draw(win);
+			
+			mazewindow.display();
+			
+			try
+			{
+		        Thread.sleep(3000);
+			}
+			catch (InterruptedException ie)
+			{
+				ie.printStackTrace();
+		    }
+			
+			mazewindow.close();
+			
+			reload = true;
 		}
 	}
 	
@@ -238,21 +309,4 @@ public class Maze {
 			System.out.print("\n");
 		}
 	}
-	
-	/**
-	 * @param args
-	 * @throws FileNotFoundException 
-	 */
-	public static void main(String[] args) throws FileNotFoundException {
-		
-		Maze testmaze = new Maze();
-		
-		while(testmaze.isOpen())
-		{
-			testmaze.keyboard();
-			
-			testmaze.animation();
-		}
-	}
-
 }

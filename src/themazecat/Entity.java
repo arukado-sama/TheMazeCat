@@ -1,6 +1,6 @@
 package themazecat;
 
-public class Entity extends Thread{
+public class Entity{
 
 	int x, y;
 	
@@ -25,10 +25,5 @@ public class Entity extends Thread{
 		if(vector=="DOWN") y = y+1;
 		if(vector=="LEFT") x = x-1;
 		if(vector=="RIGHT") x = x+1;
-	}
-	
-	public void run()
-	{
-		
 	}
 }
