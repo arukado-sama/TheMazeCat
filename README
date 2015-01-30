@@ -1,0 +1,64 @@
+-------------------------
+| THE MAZE CAT - README |
+-------------------------
+
+I - CLASSES
+II - FONCTIONNEMENT
+III - BUGS CONNUS
+
+
+I - CLASSES
+
+
+	Maze :
+
+	Il s'agit de la classe permettant la création d'un labyrinthe.
+
+
+	Entity :
+
+	Création d'une entité (chat ou souris).
+
+
+	Mouse :
+
+	Cette classe permet d'associer les souris à des threads et de connecter
+	ces threads au labyrinthe.
+
+
+	Mazesprite :
+
+	Permet de créer plus facilement des sprites en associant directement
+	les textures des images.
+
+
+
+II - FONCTIONNEMENT
+
+
+	Le fichier labyrinthe :
+
+	Il peut être de n'importe quelle extension mais .txt est recommandée.
+
+	Il doit contenir à la fin de son nom la forme "- temps" avec temps
+	un entier désignant le temps disponible pour attraper les souris.
+
+	Symboles : # mur, T piège, C chat, M souris.
+
+	/!\ Attention à ne mettre qu'un seul chat.
+
+
+	But du jeu :
+
+	Attraper les souris dans le temps imparti (programmé sur le nom du fichier).
+
+
+	Menu :
+
+	C charger un autre labyrinthe, R recommencer le même, Esc quitter le jeu.
+
+
+III - BUGS CONNUS
+
+	Le jeu peut parfois crash lors d'une partie, il s'agit d'un problème de
+	multi-threading que je n'ai pas réussi à réparer.
